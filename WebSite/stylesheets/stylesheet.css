@@ -28,6 +28,15 @@ time, mark, audio, video {
   font: inherit;
   vertical-align: baseline;
 }
+.icode{
+   white-space: nowrap ;
+   font-weight: bold;
+   background-color:rgb(230,230,230);
+   padding-left:8px;
+   padding-right:8px;
+   border-radius:5px;
+}
+
 
 /* HTML5 display-role reset for older browsers */
 article, aside, details, figcaption, figure,
@@ -160,21 +169,22 @@ p img {
 pre, code {
   width: 100%;
   color: #222;
-  background-color: #fff;
+  background-color: rgb(245,245,245);
 
   font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
   font-size: 14px;
 
-  border-radius: 2px;
-  -moz-border-radius: 2px;
-  -webkit-border-radius: 2px;
+  border-radius: 10px;
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
 }
 
 pre {
-  width: 100%;
+  width: 97%;
   padding: 10px;
   box-shadow: 0 0 10px rgba(0,0,0,.1);
   overflow: auto;
+  border-left: 8px solid rgb(254,165,1);
 }
 
 code {
@@ -187,6 +197,7 @@ pre code {
   display: block;
   box-shadow: none;
 }
+
 
 blockquote {
   color: #666;
@@ -264,8 +275,14 @@ Full-Width Styles
 
 .inner {
   position: relative;
-  max-width: 640px;
+  max-width: 800px;
   padding: 20px 10px;
+  margin: 0 auto;
+}
+.indent{
+  position: relative;
+  max-width: 800px;
+  padding: 0px 10px;
   margin: 0 auto;
 }
 
@@ -361,18 +378,34 @@ Full-Width Styles
 #main_content {
   padding-top: 40px;
 }
+.note_content {
+  color: rgb(100,100,100);
+}
 
 #footer_wrap {
   background: #212121;
 }
+.dir_table{
+  border-collapse: collapse;
+  margin: 20px auto;
+}
+.dir_table td{
+  border: 1px solid rgb(225,225,225);
+}
+.dir_table tr:nth-child(even){
+  background-color:rgb(230,230,230);
+}
 
-
-
+.dark{
+  background-color:rgb(60,60,60);
+  color:rgb(240,240,240);
+  font-weight:normal;
+}
 /*******************************************************************************
 Small Device Styles
 *******************************************************************************/
 
-@media screen and (max-width: 480px) {
+@media screen and (max-width: 800px) {
   body {
     font-size:14px;
   }
@@ -383,7 +416,7 @@ Small Device Styles
 
   .inner {
     min-width: 320px;
-    max-width: 480px;
+    max-width: 800px;
   }
 
   #project_title {
@@ -416,7 +449,7 @@ Small Device Styles
 
   code, pre {
     min-width: 320px;
-    max-width: 480px;
+    max-width: 800px;
     font-size: 11px;
   }
 

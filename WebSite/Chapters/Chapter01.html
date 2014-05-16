@@ -1,0 +1,243 @@
+---
+Created by: Chris Barbour 2014
+---
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="GekoOS : The Geko Operating System" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
+
+    <title>GekoOS - Chapter 1</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/bobjamin/GekoOS">View on GitHub</a>
+
+          <h1 id="project_title">GekoOS</h1>
+          <h2 id="project_tagline">Chapter 01 - Introduction</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/bobjamin/GekoOS/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/bobjamin/GekoOS/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+        <H1>Power On</H1>
+          <H2>POST</H2>
+            <P>
+              After the computer is switched on, the Power on Self Test (POST) code is run which tests that the power is good and that memory is not corrupt. If all is fine then it loads the Basic Input Output System (BIOS) code to a place in memory. A single instruction is placed at memory location 0 that tells the processor when it reaches this instruction it should jump to the BIOS code. The processors instruction pointer is pointed to 0 and the processor is let loose.
+              It will begin at the value of this pointer (0), read the jump instruction and then jump into the BIOS code. 
+            </P>
+          <H2>BIOS</H2>
+            <P>
+              The BIOS is specific to your motherboard and can do many things. It is the first set of screens your monitor will show. The important bit for the OS developer is the special table it creates called the Interrupt Vector Table.
+            </P>
+
+            <H4>The Interrupt Vector Table (IVT)</H4>
+              <P>
+                The interrupt Vector table is loaded at memory address 0. This table allows the code to call routines using the interrupt operation. On initialisation the BIOS sets up a whole set of interrupts to allow your code to interact with the hardware and do other useful things. 
+              </P> 
+
+            <SECTION class="indent note_content">
+              <P>
+                Note: All computers are designed to be backward compatible and as a result are booted into a legacy mode called Real mode. Real mode is a very basic 16-bit mode with limited but completely free access. Real mode is completely unprotected so be careful.
+              <P>
+            </SECTION>
+
+            <H4>Interrupts</H4>
+              <P>
+                Interrupts can be called by software or by hardware. They interrupt the current process and carry out the code they represent. Typically, these will be used for exceptions. Interrupts can be disabled and re-enabled when needed.
+              </P>
+
+            <H4>BIOS Boot Process</H4>
+              <P>
+                The mission of the BIOS is to ultimately hand over to the developer. It does this by providing the user with options for boot order. Each device is checked in the order of the boot order to see if it is a bootable device. If it is then the code on the device is loaded and begun.
+              </P>
+
+            <H4>Bootable Device</H4>
+              <P>
+                Most if not all memory devices can be bootable. All this means is that they contain a special duo of bytes at the 511th byte address. That’s it. If a memory device contains the two byte values 170 and 85, or more commonly  <SPAN class='icode'>0xAA55</SPAN> at bytes 511 and 512 then it’s a bootable device and each byte from 1 to 512 will be loaded into memory and ran. The question is how do we load a device with bytes, especially if those bytes need to be at the zeroth position without a file system?
+              </P>
+        <H1>The Boot Sector</H1>
+          <P>
+            Once the BIOS has found your bootable device it takes the first 'sector' i.e. the first 512 bytes and places them at the memory address 0x7C00. This is because of memory being used up for other things like the IVT etc.
+            Before starting some code a few things need to be mentioned. In NASM there are a few extra bits that need explaining.
+          </P>
+            <UL>
+            <LI>
+              <STRONG>ORG</STRONG> The ORG directive allows you to code happily. You can tell NASM where your code will be loaded and then any code after this point will use the location you provide plus whatever is beside ORG. For the boot sector this will be <SPAN class='icode'>[ORG 0X7C00]</SPAN>. So if you jump to address 0x10 you will end up in 0X7C10. This is a good thing.
+            </LI>
+            <LI>
+              <STRONG>$</STRONG> The $ symbol is a special symbol that gets replaced with the address of the beginning of the line it is placed on.
+            </LI>
+            <LI>
+              <STRONG>$$</STRONG> The $$ symbol gets replaced with the number of bytes between the current line and the beginning of the section.
+            </LI>
+            <LI>
+              <STRONG>times</STRONG> The times directive allows a line of assembly to be repeated any number of times.
+            </LI>
+          </UL>
+          <P>
+            In our boot sector we will need to pad out the binary file with 0's until it makes the file 510 bytes (2 for special duo), to do this we simply use <SPAN class='icode'>times 510-($-$$) db 0</SPAN>
+          </P>
+          
+          <H2>A Simple Boot Sector</H2>
+            <P>
+              Finally we can begin. Create the following directory structure under the C: directory:
+            </P>
+            <table class="dir_table">
+            <tr>
+            <td>C:</td>
+            <td>
+              <table>
+              <tr>
+              <td>\GekoOS</td>
+              <td>
+                <table>
+                  <tr>
+                  <td>\BootSector</td>
+                  <td>
+                    <table>
+                    <tr>
+                    <td>\Asm</td>
+                    <td>
+                      <table>
+                      <tr>
+                      <td>\Include</td>
+                      <td>Included files...</td>
+                      </tr>
+                      <tr>
+                      <td></td>
+                      <td>Assembly files...</td>
+                      </tr>
+                      </table>
+                    </td>
+                    </tr>
+                    <tr>
+                    <td>\Bin</td>
+                    <td>Binary files...</td>
+                    </tr>
+                    </table>
+                  </td>
+                  </tr>
+                  <tr>
+                  <td>\VM</td>
+                  <td></td>
+                  </tr>
+                </table>
+              </td>
+              </tr>
+              </table>
+            </td>
+            </tr>
+            </table>
+            <P>
+              Open up a text editor of your choice, I like to use sublime but anything will do.
+              <BR>
+              Type the following code and save to the path C:\GekoOS\BootSector\Asm under the name BootSector.asm
+            </P>
+            <PRE><CODE>[ORG 0X7C00]                        ;Code will be placed at 0x7C00
+[BITS 16]                           ;We must tell NASM to assemble 16-bit code
+Start:                CLI           ;Disables interrupt we don't want them
+                      HLT           ;Halts the processor
+TIMES 510-($-$$) DB 0               ;Store 0s up to byte 510
+DW 0XAA55                           ;The special duo</CODE></PRE>
+            
+            <BR>
+            <P>
+              This will be assembled into a binary file of 512 bytes in length.
+            </P>
+
+            <H3>Assembling</H3>
+
+              <P>
+                To assemble the code into binary open up a command prompt window and type:
+              </P>
+              
+<PRE class='dark'><CODE class='dark'>cd C:\GekoOS\BootSector
+nasm -f bin .\Asm\BootSector.asm -o .\Bin\BootSector.bin</CODE></PRE>
+              <BR>
+              <P>
+                The <SPAN class='dark icode'>-f bin</SPAN> tells NASM that the format is binary. The <SPAN class='dark icode'>-o BootSector.bin</SPAN> is the name of the output file we are creating.
+              </P>
+              <P>
+                You have now just created your first boot sector! Now, how to run it??
+              </P>
+
+            <H3>BOCHS Configuration</H3>
+
+              <P>
+                To allow our boot sector to run under bochs we need to configure bochs correctly.
+                <BR>
+                Go to your bochs installation folder and find the text file named <STRONG>bochsrc-sample</STRONG>.
+                <BR>
+                Open the file and save it to the directory C:\GekoOS\VM under the filename bochsrc<STRONG>.bxrc</STRONG>.
+              </P>
+              
+              <SECTION class="indent note_content">
+                Renaming the file type allows us to open the file as a bochs file that runs bochs under the given configuration.
+                This file contains default configuration setup for bochs and provides you with a lot of information about configuring bochs. There are three sections we need to edit in order for our boot sector to be seen.
+              </SECTION>
+
+              <P>
+                Scroll down to the FLOPPYA section and edit the first <SPAN class='icode'>floppya</SPAN> without a # before it to be <SPAN class='icode'>floppya: 1_44=BootSector.bin, status=inserted</SPAN>. Adding this line tells bochs that there is a floppy disk drive available and it has a floppy disk inserted that has the contents of BootSector.bin of which is a 3.5" 1.44Mb disk.
+              </P>
+
+              <P>
+                Second, scroll down to the ATA section and put a # before the first ata line to comment it out. We don't need this yet, its for hard disks and we will use it later.
+              </P>
+
+              <P>
+                Lastly, scroll to the BOOT section and edit the <SPAN class='icode'>boot:</SPAN> line to read <SPAN class='icode'>boot: floppy</SPAN>. This provides the virtual BIOS with the boot order.
+              </P>
+
+          <H2>Hit Play!</H2>
+
+            <P>
+              The final step is to see our Operating System, yes Operating System, up and running.
+            </P>
+
+            <P>
+              If you double click the bochsrc file it will attempt to load the floppy disk and it will fail. You should do this to prove to yourself that the next step succeeds.
+              Copy over the BootSector.bin file to the VM directory either by simple copy and paste or by running the copy command as follows:
+            </P>
+
+<PRE class='dark'><CODE class='dark'>cd C:\GekoOS
+copy /Y /b .\BootSector\Bin\BootSector.bin .\VM\BootSector.bin</CODE></PRE>
+            <P>
+              Now double click the bochsrc file again and it will load your OS. You now have an operational operating system (if it all worked).
+            </P>
+
+            <P>
+              All you should see is the line <SPAN class='dark icode'>Booting from Floppy...</SPAN> and then underneath that you should see a flickering underscore. Nothing happens because in the code you have told it to clear all interrupts and then halt the processor until the computer is turned off or reset.
+              <BR> 
+              It does exactly this :D
+           </P>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">GekoOS maintained by <a href="https://github.com/bobjamin">Chris Barbour</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
