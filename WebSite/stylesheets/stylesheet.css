@@ -186,6 +186,9 @@ pre {
   overflow: auto;
   border-left: 8px solid rgb(254,165,1);
 }
+.red {
+  border-left: 8px solid red;
+}
 
 code {
   padding: 3px;
@@ -499,5 +502,6 @@ Small Device Styles
     max-width: 800px;
     font-size: 11px;
   }
+
 
 }

@@ -9,11 +9,27 @@ Created by: Chris Barbour 2014
     <meta http-equiv="X-UA-Compatible" content="chrome=1" />
     <meta name="description" content="GekoOS : The Geko Operating System" />
     <meta name="chapter" content="4" />
-    
+
     <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
 
     <title>GekoOS - Chapter 4</title>
-
+    <!--
+    Inline Code
+    <SPAN class='icode'>0xAA55</SPAN>
+    Dark Inline Code
+    <SPAN class='dark icode'>0xAA55</SPAN>
+    Block Code
+    <PRE><CODE>**code**</CODE></PRE>
+    Byte table
+    <TABLE class='byte_table'></TABLE>
+    Styled Table
+    <TABLE class='dir_table'></TABLE>
+    Indented Gray Note
+    <SECTION class="indent note_content">
+      <P>
+      </P>
+    </SECTION>
+    -->
   </head>
 
   <body>
@@ -36,7 +52,43 @@ Created by: Chris Barbour 2014
     <!-- MAIN CONTENT -->
     <div id="main_content_wrap" class="outer">
       <section id="main_content" class="inner">
-          
+        
+        <H1>Clean up</H1>
+          <P>
+            Now we have the ability to load sectors that exist after the boot sector we can start writing the boot loader. Open up the BootSector.asm and remove everthing after the special duo <SPAN class='icode'>0xAA55</SPAN>. We are going to write this in a new file. Also remove the two lines that print out whats present at 0x9000 shown below.
+          </P>
+
+<PRE class='red'><CODE>    MOV SI, 0X9000
+    CALL PrintString16</CODE></PRE>
+          <BR>
+
+          <P>
+            Replace the above two lines with:
+          </P>
+
+<PRE><CODE>    JMP WORD 0X00:0X9000</CODE></PRE>
+          <BR>
+
+          <P>
+            This is an absolute far jump to the location in memory the boot loader will be placed.
+          </P>
+
+           <SECTION class="indent note_content">
+            <P>
+              Note: Make sure to delete everything after the 512th byte in the bootsector otherwise this will be loaded at address 0x9000 and the jump will land there.
+            </P>
+          </SECTION>
+
+          <H1>The Boot Loader</H1>
+
+            <P>
+              Now we can create a separate file where the boot loader code can reside. The reason for creating a second file is not only to separate the code but to allow us to use the ORG directive to point to 0x9000 at the top so that offsets are correct.
+              <BR>
+              Open up a new text document and save it as BootLoader.asm in the directory C:/GekoOS/BootSector/Asm/. Now edit the file to read:
+            </P>
+
+<PRE><CODE>
+
       </section>
     </div>
 
