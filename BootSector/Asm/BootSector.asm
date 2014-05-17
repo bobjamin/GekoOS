@@ -1,11 +1,7 @@
 [ORG 0X7C00]
 [BITS 16]
 Start:
-	XOR AX, AX			;Set segments to 0 offset
-	MOV DS, AX
-	MOV ES, AX
-    MOV SI, WELCOMEMSG  ;Print welcome message
-    CALL PrintString16
+	
     CLI                 ;Clear interrupts
     HLT                 ;Halt Processor
 
