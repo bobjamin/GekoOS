@@ -1,0 +1,282 @@
+---
+Created by: Chris Barbour 2014
+---
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="GekoOS : The Geko Operating System" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
+
+    <title>GekoOS - Chapter 3</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/bobjamin/GekoOS">View on GitHub</a>
+
+          <h1 id="project_title">GekoOS</h1>
+          <h2 id="project_tagline">Chapter 03 - Disk Access</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/bobjamin/GekoOS/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/bobjamin/GekoOS/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+
+        <H1>Where We Are</H1>
+          
+          <P>
+            At present we have a single file building that represents our floppy disk image. This file is 512 bytes in size and is our boot sector. All it does is print a character or a string of characters to the text mode screen. Not a lot. This is what the floppy disk image looks like:
+          </P>
+
+          <TABLE class='byte_table'>
+            <TR>
+              <TH>Byte Position:</TH>
+              <TH>0</TH>
+              <TH></TH>
+              <TH>0x200</TH>
+            </TR>
+            
+            <TR>
+              <TD></TD>
+              <TD colspan="2">BootSector</TD>
+              <TD></TD>
+            </TR>
+          </TABLE>
+
+          <P>
+            This is what memory looks like after the BIOS loads the boot sector:
+          </P>
+
+          <TABLE class='byte_table'>
+            <TR>
+              <TH>Byte Position:</TH>
+              <TH>0</TH>
+              <TH></TH>
+              <TH>0x7C00</TH>
+              <TH></TH>
+              <TH>0x7E00</TH>
+            </TR>
+
+            <TR>
+              <TD></TD>
+              <TD colspan="2">IVT etc.</TD>
+              <TD colspan="2">BootSector</TD>
+              <TD></TD>
+            </TR>
+          </TABLE>
+
+          <P>
+            Everything seems good, but there's one problem. We are limited to 512 bytes of code for the operating system. Thats not nearly enough. There needs to be a way of loading more bytes of code into memory
+          </P>
+
+        <H1>Boot Loader</H1>
+          <P>
+            A solution to this problem is called a 2-stage boot loader. The first stage is the boot sector whos only job is to load a second stage called the boot loader. The boot loader will be responsible for ultimately loading the kernel.
+          </P>
+
+          <P>
+            Our boot sector will have only one role. That is to load the boot loader. To begin creating this we need to understand how to read data from the disk and load it into memory.
+          </P>
+          
+          <P>
+            Once loaded the above floppy image will become: 
+          </P>
+ 
+          <TABLE class='byte_table'>
+            <TR>
+              <TH>Byte Position:</TH>
+              <TH>0</TH>
+              <TH></TH>
+              <TH>0x200</TH>
+              <TH></TH>
+              <TH>0x200 + size of bootloader</TH>
+
+            </TR>
+
+            <TR>
+              <TD></TD>
+              <TD colspan="2">BootSector</TD>
+              <TD colspan="2">BootLoader</TD>
+              <TD></TD>
+            </TR>
+          </TABLE>
+
+          <P>
+            This is what memory will look like after the BIOS loads the boot sector and the boot sector loads the boot loader. We will need to use the stack, which grows downward in memory so we can place it at 0x8000 to give it enough room.
+          </P>
+
+          <TABLE class='byte_table'>
+            <TR>
+              <TH>Byte Position:</TH>
+              <TH>0</TH>
+              <TH></TH>
+              <TH>0x7C00</TH>
+              <TH></TH>
+              <TH>0x7E00</TH>
+              <TH></TH>
+              <TH>0x8000</TH>
+              <TH></TH>
+              <TH>0x9000</TH>
+              <TH></TH>
+              <TH>0x9000 + bl size</TH>
+            </TR>
+
+            <TR>
+              <TD></TD>
+              <TD colspan="2">IVT etc.</TD>
+              <TD colspan="2">BootSector</TD>
+              <TD colspan="2">Stack</TD>
+              <TD colspan="2">***</TD>
+              <TD colspan="2">BootLoader</TD>
+              <TD></TD>
+            </TR>
+          </TABLE>
+
+        <H1>Disk Access</H1>
+
+          <P>
+            Once again the BIOS has done us a favour and provided us with an interrupt for disk access, <SPAN class='icode'>Int 0x13</SPAN>. It is important to note that when the BIOS loads the boot device (floppy disk) it stores a number associated with this device in the <SPAN class='icode'>DL</SPAN> register.
+          </P>
+
+          <H3>Int 0x13</H3>
+              <P>
+                Interrupt 0x13 is the interrupt associated with disk access. The first function we will look at is the read function. The read function reads from the device and places the bytes it loads into memory.
+              </P>
+
+              <TABLE class="dir_table">
+                <TR>
+                  <TH>Register</TH>
+                  <TH>Value</TH>
+                  <TH>Description</TH>
+                </TR>
+
+                <TR>
+                  <TD>AH</TD>
+                  <TD>0X02</TD>
+                  <TD>Load bytes from Disk Function</TD>
+                </TR>
+
+                <TR>
+                  <TD>AL</TD>
+                  <TD>Byte</TD>
+                  <TD>Number of sectors to load. Sector size is device dependent. (512 bytes for floppys)</TD>
+                </TR>
+
+                <TR>
+                  <TD>CH</TD>
+                  <TD>Byte</TD>
+                  <TD>Low 8-bits of cylinder number</TD>
+                </TR>
+
+                <TR>
+                  <TD>CL bits 0-5 (<STRONG>111111</STRONG>11)</TD>
+                  <TD>5 Bits</TD>
+                  <TD>First Sector Number</TD>
+                </TR>
+
+                <TR>
+                  <TD>CL bits 6-7 (111111<STRONG>11</STRONG>)</TD>
+                  <TD>2 Bits</TD>
+                  <TD>High 2-bits of Cylinder Number (HD only)</TD>
+                </TR>
+
+                <TR>
+                  <TD>DH</TD>
+                  <TD>Byte</TD>
+                  <TD>Head Number</TD>
+                </TR>
+
+                <TR>
+                  <TD>DL</TD>
+                  <TD>Byte</TD>
+                  <TD>
+                    <TABLE class='dir_table'>
+                      <TR><TD colspan='2'>Drive Number</TD></TR>
+                      <TR>
+                        <TH>DL</TH>
+                        <TH>Drive</TH>
+                      </TR>
+
+                      <TR>
+                        <TD>0X00</TD>
+                        <TD>Floppy 1 (A:)</TD>
+                      </TR>
+
+                      <TR>
+                        <TD>0X01</TD>
+                        <TD>Floppy 2 (B:)</TD>
+                      </TR>
+
+                      <TR>
+                        <TD>0X80</TD>
+                        <TD>Hard Disk 1 (C:)</TD>
+                      </TR>
+
+                      <TR>
+                        <TD>0X81</TD>
+                        <TD>Hard Disk 2 (D:)</TD>
+                      </TR>
+
+                    </TABLE>
+                  </TD>
+                </TR>
+
+                <TR>
+                  <TD>ES:BX</TD>
+                  <TD>Integer:Integer</TD>
+                  <TD>Memory location to write to.</TD>
+                </TR>
+
+                <TR>
+                  <TH colspan='3' style='text-align:center'>Returns</TH>
+                </TR>
+
+                <TR>
+                  <TD>CF</TD>
+                  <TD>1 OR 0</TD>
+                  <TD>Carry flag is set to 1 on error.</TD>
+                </TR>
+
+                <TR>
+                  <TD>AL</TD>
+                  <TD>Integer</TD>
+                  <TD>Number of sectors actually read. Only valid after CF is set on some BIOSs</TD>
+                </TR>
+
+                <TR>
+                  <TD>AH</TD>
+                  <TD>Integer</TD>
+                  <TD>Status Number</TD>
+                </TR>
+              </TABLE>
+
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <div style='float:right;font-size:30px;color:rgb(240,240,240);'><a href="../index.html"><</a>&nbsp&nbsp<a href="./Chapter02.html">></a></div>
+        <p class="copyright">GekoOS maintained by <a href="https://github.com/bobjamin">Chris Barbour</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>

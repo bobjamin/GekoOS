@@ -389,16 +389,57 @@ Full-Width Styles
   border-collapse: collapse;
   margin: 20px;
 }
-.center{
-  margin: 20px auto;
-}
 .dir_table td{
   border: 1px solid rgb(225,225,225);
+}
+.dir_table tr:nth-child(odd){
+  background-color:rgb(240,240,240);
 }
 .dir_table tr:nth-child(even){
   background-color:rgb(230,230,230);
 }
+td .dir_table{
+  margin:0px;
+  width:100%;
+}
 
+.byte_table{
+  border-collapse: collapse;
+  border:1px solid gray;
+  margin: 20px;
+}
+.byte_table td{
+  border: 0px solid rgb(225,225,225);
+}
+
+.byte_table tr:nth-child(odd){
+  background-color:rgb(230,230,230);
+}
+.center{
+  margin: 20px auto;
+}
+.byte_table th{
+  background-color:rgb(240,240,240);
+  color: -webkit-text;
+  border: 0px solid transparent;
+}
+.byte_table th:nth-child(1), .byte_table td:nth-child(1){
+  border-left:0px solid blue;
+}
+.byte_table th:nth-child(even){
+  border-left:1px solid gray;
+}
+.byte_table td{
+  border-left:1px solid gray;
+  }
+.byte_table th:nth-child(4n-2), .byte_table th:nth-child(4n-1), 
+.byte_table td:nth-child(even){
+  background-color:rgb(240,240,240);
+}
+.byte_table th:nth-child(4n), .byte_table th:nth-child(4n+1), .byte_table th:nth-child(1), 
+.byte_table td:nth-child(odd){
+  background-color:rgb(230,230,230);
+}
 .dark{
   background-color:rgb(60,60,60);
   color:rgb(240,240,240);
