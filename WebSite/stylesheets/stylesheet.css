@@ -387,6 +387,9 @@ Full-Width Styles
 }
 .dir_table{
   border-collapse: collapse;
+  margin: 20px;
+}
+.center{
   margin: 20px auto;
 }
 .dir_table td{

@@ -1,0 +1,357 @@
+---
+Created by: Chris Barbour 2014
+---
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="GekoOS : The Geko Operating System" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
+
+    <title>GekoOS - Chapter 2</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/bobjamin/GekoOS">View on GitHub</a>
+
+          <h1 id="project_title">GekoOS Chapter 2</h1>
+          <h2 id="project_tagline">First Interrupts</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/bobjamin/GekoOS/zipball/B02Interrupts">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/bobjamin/GekoOS/tarball/B02Interrupts">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+          
+        <H1>Interrupts</H1>
+          <P>
+            This chapter will introduce what an interrupt is and provide a way of invoking interrupts to draw text to the screen.
+            <BR>
+            All processors, as a standard boot up into 16-bit real mode as previously mentioned. Along with this an interrupt vector TABLE is installed into memory so that standard functions are already present for the programmer. Another important note, the processor will begin under a special display mode known as text mode. In this mode we are given a grid of character spaces 80 wide and 25 high. These conveniently map directly to memory locations 0xB8000 through 0xB8FA0. Note that each cell in this grid is two bytes in memory, a word. Each block is represented by one byte for colour and one byte for the character to be displayed.
+          </P>
+          <P>
+            Interrupts range in function. In assembly we can call an interrupt by its number like this: `INT 0X10`. Interrupts are generally classified by this number, so INT 0X10 refers to the Video set of interrupts. They are further broken down into function using the registers. So, to call a specific interrupt you set up the registers with values it requires and then call the interrupt you need.
+          </P>
+
+          <H2>Printing A Single Character</H2>
+            <P>
+              Printing to the screen will help us to debug our code and will provide feedback that our OS is working. The first place to start is the character. Introduce interrupt 0x10 or (16 if you like).
+            </P>
+
+            <H3>Int 0x10</H3>
+              <P>
+                Interrupt 0x10 is the interrupt associated with video output. The first function we will look at is the character function.
+              </P>
+
+              <TABLE class="dir_table">
+                <TR>
+                  <TH>Register</TH>
+                  <TH>Value</TH>
+                  <TH>Description</TH>
+                </TR>
+
+                <TR>
+                  <TD>AH</TD>
+                  <TD>0xA</TD>
+                  <TD>Print Character at Cursor Function</TD>
+                </TR>
+
+                <TR>
+                  <TD>AL</TD>
+                  <TD>ASCII Character</TD>
+                  <TD>The Character</TD>
+                </TR>
+
+                <TR>
+                  <TD>BH</TD>
+                  <TD>Integer</TD>
+                  <TD>The Page Number</TD>
+                </TR>
+
+                <TR>
+                  <TD>CX</TD>
+                  <TD>Integer</TD>
+                  <TD>Number of times to repeat character</TD>
+                </TR>
+              </TABLE>
+
+              <P>
+                Lets write a simple piece of code for writing a character to the screen.
+                Open up the BootSector.asm file and insert the following after the <SPAN class="icode">Start:</SPAN> label before the <SPAN class="icode">CLI</SPAN> line:
+              </P>
+
+              <H3> Print function </H3>
+
+<PRE><CODE>MOV AH, 0XA    ;Print Character Function
+MOV AL, 'X'    ;Print the X Character
+MOV BH, 0      ;The page number
+MOV CX, 5      ;Print X 5 times
+INT 0X10       ;Make the magic happen</CODE></PRE>
+              <BR>
+
+              <P>
+                Now save the file, run the nasm command to make a binary, copy the binary over to the VM directory and double click the bochsrc file. Voila! You should see 5 beautiful Xs. 
+              </P>
+
+          <H2>The Build Process</H2>
+
+            <P>
+              You can probably see already that to make a small change we need to do a lot of work before the OS is built and running. There are many different solutions to this problem and they all equate to automation. You can use any method of automation, common tools like Make are typically used but you could make your own through a high level language like java or C#, even write a front end. I will walk through my simple solution to the problem using a very simple, but effective batch file.
+            </P>
+
+            <SECTION class="indent note_content">
+              <P>
+                In our assembly file we will need to add included files, this is what the Include folder is for. In order to assemble using the nasm command with relative include paths in assembly files you need to add the path to the include folder using the `-i` option.
+              </P>
+            </SECTION>
+
+            <H3>Batch Files</H3>
+
+              <P>
+                We can create a batch file to run commands that we want to repeat over and over. A batch file is a simple text file with a list of command line commands. They also provide some functionality for conditional logic and error testing so we can get some feedback about the commands we are processing.
+                <BR>
+                In order for us to run the bochs configuration file using batch commands we need to make a shortcut and run that. Go to the bochsrc.bxrc, right click on the file and click Create Shortcut. Copy the shortcut file to the GekoOS directory and rename it to bochsrc.
+              </P>
+
+              <P>
+                Open up your favourite text editor and save the empty file in the GekoOS directory under the filename Assemble.bat. Edit the file by adding the following script:
+              </P>
+
+            <H3>Assemble.bat</H3>
+
+<PRE class="dark"><CODE class='dark'>Remove unwanted text
+@ECHO OFF
+
+::Set up properties to reference later
+SET BootSector=.\BootSector
+SET BIN=%BootSector%\Bin
+SET ASM=%BootSector%\Asm
+SET ASMINC=%ASM%\Include\
+SET VM=.\VM
+
+::Assemble BootSector and add Include directory
+ECHO Assembling BootSector...
+ECHO.
+nasm -f bin -o %BIN%\BootSector.bin -i %ASMINC% %ASM%\BootSector.asm
+::Catch errors and exit
+IF ERRORLEVEL 1 GOTO AsmFail
+::If No errors continue
+
+::Copy Binary to the Virtual Machine directory
+:AsmComplete
+ECHO Assembly complete
+ECHO.
+ECHO Copying Binary...
+ECHO.
+copy /Y /b %BIN%\BootSector.bin %VM%\BootSector.bin
+::Catch errors and exit
+IF ERRORLEVEL 1 GOTO CopyFail
+
+::Run Bochs
+ECHO.
+ECHO Running BOCHS...
+ECHO.
+START bochsrc.lnk
+GOTO END
+
+::Echo fail message
+:AsmFail
+ECHO.
+ECHO Assembly failed
+ECHO.
+GOTO END  
+
+::Echo fail message
+:CopyFail
+ECHO.
+ECHO Copy failed
+ECHO.
+GOTO END
+
+:END
+PAUSE</CODE></PRE>
+              <BR>
+              
+              <P>
+                Now if you double click this it will assemble the boot sector into a binary, copy the binary to the virtual machine and run bochs. So any time you make a change you just need to double click this file. Also we have added the -i option to the nasm command. This means that in our assembly files we can include files from the include directory relatively.
+              </P>
+
+          <H2>PrintChar16</H2>
+
+            <P>
+              Now we have our builder we can code a bit more relaxed. We should outsource our code into files that we can include into the boot sector. Create a new file that will contain our 16-bit printing logic, name it Print16.i and save it to the Include directory. This file will contain our print character method alone for now. This is shown below:
+            </P>
+
+              <H3>Print16.i</H3>
+
+<PRE><CODE>;16-Bit print character method
+;Prints character in AL at the current cursor position
+PrintChar16:
+    PUSH BX           ;Save the current state
+    PUSH CX
+    MOV AH, 0XA       ;Print function
+    XOR BX, BX        ;Make BX 0
+    MOV CX, 1         ;Repeat once
+    INT 0X10          ;Go!
+    POP CX            ;Restore state
+    POP BX
+RET</CODE></PRE>
+                <BR>
+
+                <P>
+                  Now edit the BootSector file to read:
+                </P>
+
+              <H3>BootSector.asm</H3>
+
+<PRE><CODE>[ORG 0X7C00]
+[BITS 16]
+Start:
+    MOV AL, 'X'
+    CALL PrintChar16
+    CLI               ;Clear interrupts
+    HLT               ;Halt Processor
+%include "Print16.i"  ;Include our print file
+TIMES 510-($-$$) DB 0 
+DW 0XAA55</CODE></PRE>
+                  <BR>
+
+                  <P>
+                    Save the two files, double click the batch builder file we created and Boom! You should now see a single X again.
+                  </P>
+
+              <H2>PrintString16</H2>
+
+                <P>
+                  The only logical step forward is to now write a draw string method. The string method will not call our PrintChar16 however as this would be very time consuming pushing and popping and setting up the registers for every character. We will set the registers once only. Also our print character method does not move forward so each time we print it will appear at the same location, which is the cursor's position. The following function of interrupt 0x10 does what we need, it prints a character and moves forward one space.
+                </P>
+
+                <TABLE class="dir_table">
+                  <TR>
+                    <TH>Register</TH>
+                    <TH>Value</TH>
+                    <TH>Description</TH>
+                  </TR>
+
+                  <TR>
+                    <TD>AH</TD>
+                    <TD>0xE</TD>
+                    <TD>Print Character and Increment Cursor Function
+                    </TD>
+                  </TR>
+
+                  <TR>
+                    <TD>AL</TD>
+                    <TD>ASCII Character</TD>
+                    <TD>The Character</TD>
+                  </TR>
+
+                  <TR>
+                    <TD>BH</TD>
+                    <TD>Integer</TD>
+                    <TD>The Page Number</TD>
+                  </TR>
+
+                  <TR>
+                    <TD>BL</TD>
+                    <TD>Byte</TD>
+                    <TD>Color for graphics modes only</TD>
+                  </TR>
+                </TABLE>
+
+                <SECTION class="indent note_content">
+                  <P> 
+                    Note: The LODSB command loads a single byte from DS:SI int AL and increments SI if DF (direction flag) is 0 or decrements it if DF is 1. CLD clears the direction flag to be zero.
+                  </P>
+                </SECTION>
+
+                <P>
+                  Add the following method to Print16.i
+                </P>
+
+                <H3>Print16.i</H3>
+
+<PRE><CODE>;16-Bit print string method
+;Prints a null terminated string of characters
+; from the memory location pointed at by BX
+PrintString16:
+  PUSHA     ;Save State
+  MOV AH, 0XE   ;Print function
+  XOR BX, BX    ;Make BX 0
+  CLD           ;Load String Left to Right    
+.Loop:
+  LODSB     ;Load byte from DS:SI to AL
+  OR AL, AL     ;If 0 jump to end
+  JZ .End
+  INT 0X10    ;Print Character
+  JMP .Loop
+.End:
+POPA
+RET</CODE></PRE>
+                  <BR>
+
+                  <P>
+                    Because the Data segment register (DS) is being used we need to set it to 0 in our BootSector. Also we can save a string before the TIMES directive so it doesn't add to the amount of bytes the file is long. So all we need to do is set SI to point to the location of our text and call our new method. Edit BootSector.asm to read as follows:
+                  </P>
+                
+                <H3>BootSector.asm</H3>
+
+<PRE><CODE>[ORG 0X7C00]
+[BITS 16]
+Start:
+    XOR AX, AX      ;Set segments to 0 offset
+    MOV DS, AX
+    MOV ES, AX
+    MOV SI, WELCOMEMSG  ;Print welcome message
+    CALL PrintString16
+    CLI                 ;Clear interrupts
+    HLT                 ;Halt Processor
+
+%include "Print16.i"  ;Include our print file
+
+WELCOMEMSG  DB  "--- Welcome to Geko (16-bit real mode) ---", 0
+
+TIMES 510-($-$$) DB 0 
+DW 0XAA55</CODE></PRE>
+                  <BR>
+
+                  <P>
+                    Build using our build script and you should see a beautiful message being displayed as shown below. :)
+                  </P>
+
+                  <IMG src="https://raw.githubusercontent.com/bobjamin/GekoOS/B02Interrupts/Images/Image01_WelcomeMessage.png?token=5025349__eyJzY29wZSI6IlJhd0Jsb2I6Ym9iamFtaW4vR2Vrb09TL0IwMkludGVycnVwdHMvSW1hZ2VzL0ltYWdlMDFfV2VsY29tZU1lc3NhZ2UucG5nIiwiZXhwaXJlcyI6MTQwMDYwNzExNX0%3D--47732869340a3574cdf2235da1451207f87b8b5a" alt="Welcome Message Text" />
+
+                  <SECTION class="indent note_content">
+                    <P> 
+                      Everything up until now can be found in branch: B02Interrupts which can be downloaded using the tar and zip icons at the top of this page.
+                    </P>
+                  </SECTION>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <div style='float:right;font-size:30px;color:rgb(240,240,240);'><a href="../index.html"><</a>&nbsp&nbsp<a href="./Chapter02.html">></a></div>
+        <p class="copyright">GekoOS maintained by <a href="https://github.com/bobjamin">Chris Barbour</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
