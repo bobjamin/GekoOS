@@ -12,6 +12,7 @@ SET VM=.\VM
 ECHO Assembling BootSector...
 ECHO.
 nasm -f bin -o %BIN%\BootSector.bin -i %ASMINC% %ASM%\BootSector.asm
+nasm -f bin -o %BIN%\BootLoader.bin -i %ASMINC% %ASM%\BootLoader.asm
 ::Catch errors and exit
 IF ERRORLEVEL 1 GOTO AsmFail
 ::If No errors continue
@@ -22,7 +23,7 @@ ECHO Assembly complete
 ECHO.
 ECHO Copying Binary...
 ECHO.
-copy /Y /b %BIN%\BootSector.bin %VM%\BootSector.bin
+copy /Y /b %BIN%\BootSector.bin+%BIN%\BootLoader.bin %VM%\BootSector.bin
 ::Catch errors and exit
 IF ERRORLEVEL 1 GOTO CopyFail
 
