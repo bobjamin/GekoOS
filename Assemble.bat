@@ -23,7 +23,7 @@ ECHO Assembly complete
 ECHO.
 ECHO Copying Binary...
 ECHO.
-copy /Y /b %BIN%\BootSector.bin+%BIN%\BootLoader.bin %VM%\BootSector.bin
+copy /Y /b %BIN%\BootSector.bin + /b %BIN%\BootLoader.bin %VM%\BootSector.bin
 ::Catch errors and exit
 IF ERRORLEVEL 1 GOTO CopyFail
 

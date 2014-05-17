@@ -16,14 +16,8 @@ Start:
 
     MOV SI, DISKSCCMSG	;If we get here then success
     CALL PrintString16
-
-    ;MOV SI, 0X9000		;Print out what is at 0x9000
-    ;CALL PrintString16	;Should be BLAH BLAH BLAH
     
     JMP WORD 0X00:0X9000
-    ;PUSH ES
-    ;PUSH BX
-    ;RETF
 
     CLI                 ;Clear interrupts
     HLT                 ;Halt Processor
