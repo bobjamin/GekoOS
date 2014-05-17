@@ -14,3 +14,6 @@ BOOTDRIVE	DB	0
 
 TIMES 510-($-$$) DB 0 
 DW 0XAA55
+
+;Code not loaded by BIOS after the 512 byte mark
+MSG 		DB "BLAH BLAH BLAH", 0
