@@ -87,7 +87,40 @@ Created by: Chris Barbour 2014
               Open up a new text document and save it as BootLoader.asm in the directory C:/GekoOS/BootSector/Asm/. Now edit the file to read:
             </P>
 
-<PRE><CODE>
+<PRE><CODE>[ORG 0X9000]
+[BITS 16]
+
+Start:
+    MOV SI, MSG
+    CALL PrintString16
+    CLI
+    HLT
+
+%include "Print16.i"
+
+MSG   DB  "HELLO",0</CODE></PRE>
+            <BR>
+
+            <P>
+              This should look familiar. Its basically the original boot sector from chapter 1. The only difference is that the ORG directive is now pointed at 0x9000. This is usefull.
+            </P>
+
+            <H3>The Build Process</H3>
+
+              <P>
+                The build process needs to be edited slightly to allow this new file to be assembled. It also needs to concatenate the binary output from both the boot sector and the boot loader together. Luckily this is wee buns.
+                <BR>
+                Add the following line below the <SPAN class='dark icode'>nasm</SPAN> line in Assemble.bat:
+              </P>
+
+<PRE class='dark'><CODE class='dark'>nasm -f bin -o %BIN%\BootLoader.bin -i %ASMINC% %ASM%\BootLoader.asm</CODE></PRE>
+              <BR>
+
+              <P>
+                This line allows the boot loader to be assembled. Now all we need to do is to edit the copy line to read:
+              </P>
+              
+<PRE class='dark'><CODE class='dark'>copy /Y /b %BIN%\BootSector.bin + /b %BIN%\BootLoader.bin %VM%\BootSector.bin</CODE></PRE>               <BR>
 
       </section>
     </div>
