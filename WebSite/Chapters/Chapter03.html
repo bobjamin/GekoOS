@@ -262,7 +262,169 @@ Created by: Chris Barbour 2014
                   <TD>Status Number</TD>
                 </TR>
               </TABLE>
+              <BR>
 
+          <H2>The New BootSector.asm</H2>
+
+            <P>
+              We now have enough information to write a method for accessing the disk. This Interrupt (Int 0x13) is a bit more interessting than the last as it gives us some feedback. We can use this feedback to do some error handling.
+              <BR>
+              Lets start by getting our BootSector back to a clean state like the following:
+            </P>
+
+<PRE><CODE>[ORG 0X7C00]
+[BITS 16]
+Start:
+
+    CLI                 ;Clear interrupts
+    HLT                 ;Halt Processor
+
+%include "Print16.i"  ;Include our print file
+
+WELCOMEMSG  DB  "--- Welcome to Geko (16-bit real mode) ---", 0
+
+TIMES 510-($-$$) DB 0 
+DW 0XAA55</CODE></PRE>
+            <BR>
+
+            <P>
+              Now add in a few variables below the <SPAN class='icode'>WELCOMEMSG</SPAN> variable. The last one is set to 0 for now but it will hold the current device. We won't use the first message but we can keep it there for later.
+            </P>
+
+<PRE><CODE>WELCOMEMSG DB  "--- Welcome to Geko (16-bit real mode) ---", 0
+DISKERRMSG  DB  "Disk Read Error!",0
+DISKSCCMSG  DB  "Disk Read Success!", 0
+BOOTDRIVE DB  0</CODE></PRE>
+            <BR>
+
+            <P>
+              Next we need to add some code after the 512 byte mark so that we have something useful to load. Place the following below the special duo line, <SPAN class='icode'>DW 0XAA55</SPAN>:
+            </P>
+
+<PRE><CODE>;Code not loaded by BIOS after the 512 byte mark
+MSG     DB "BLAH BLAH BLAH", 0</CODE></PRE>
+            <BR>
+
+            <P>
+              Now we can write some code to read the bytes from disk. To do this we need to do a bit of thinking. If you look at the table above the AL register is used to select the number of sectors you wish to copy. However it is also used to return the number of sectors actually read. So we need to use a different register for this so that we can compare the two. We can use DH for this, however DH is also required in the read function so we need to PUSH it to the stack and POP it when we do the comparison.
+              Here is my ReadSector method, place it below the HLT after the Start label.
+            </P>
+
+<PRE><CODE>;Read DH sectors to ES:BX from Drive DL
+ReadSectors:
+  PUSH DX
+  MOV AH, 0X2     ;Read Disk Function
+  MOV CH, 0       ;Cylinder 0
+  MOV CL, 0X2     ;2nd Sector (512 bytes)
+  MOV AL, DH      ;No. Sectors
+  MOV DH, 0       ;Head 0
+  INT 0X13      ;Read
+  JC .DiskError   ;Error if Carry Flag set
+  POP DX
+  CMP AL, DH      ;Compare No. actually copied
+  JNE .DiskError
+RET
+.DiskError:
+  MOV SI, DISKERRMSG
+  CALL  PrintString16
+  CLI
+  HLT</CODE></PRE>
+            <BR>
+
+            <P>
+              Finally we can attempt the actual load. The following code shows the BootSector code after the Start label and before the ReadSectors method. It sets up the stack and stores the current device into the BOOTDRIVE variable. BIOS Places this number into DL for us. The loaded data is found at 0x9000 in memory as described above and the message that is loaded is then printed to screen.
+              <BR>
+              32 sectors are loaded giving us 16 Kb of free space. This should be enough for our Operating system to roam free and load a kernel.
+            </P>
+
+<PRE><CODE>Start:
+
+  MOV [BOOTDRIVE], DL   ;Store Boot Device number
+  MOV BP, 0x8000        ;Set Stack top to 0x8000
+  MOV SP, BP
+  XOR AX, AX            ;Set segments to 0 offset
+  MOV DS, AX
+  MOV ES, AX            ;Used for loaded memory location
+
+    MOV BX, 0X9000      ;Load data here
+    MOV DL, [BOOTDRIVE] ;Select the current drive
+    MOV DH, 32          ;Load 32 sectors (16 Kb)
+    CALL ReadSectors    ;Load into memory
+
+    MOV SI, DISKSCCMSG  ;If we get here then success
+    CALL PrintString16
+
+    MOV SI, 0X9000      ;Print out what is at 0x9000
+    CALL PrintString16  ;Should be BLAH BLAH BLAH
+
+    CLI                 ;Clear interrupts
+    HLT                 ;Halt Processor</CODE></PRE>
+            <BR>
+
+            <P>
+              That is how you load data from the disk and read the data from memory. You should now see "BLAH BLAH BLAH" appear on the screen. This means everthing worked well. 
+              <BR>
+              The full code listing for this chapter is shown below:
+            </P>
+          <H2>BootSector.asm</H2>
+
+<PRE class='largecode'><CODE>[ORG 0X7C00]
+[BITS 16]
+Start:
+
+  MOV [BOOTDRIVE], DL   ;Store Boot Device number
+  MOV BP, 0x8000        ;Set Stack top to 0x8000
+  MOV SP, BP
+  XOR AX, AX            ;Set segments to 0 offset
+  MOV DS, AX
+  MOV ES, AX            ;Used for loaded memory location
+
+  MOV BX, 0X9000        ;Load data here
+  MOV DL, [BOOTDRIVE]   ;Select the current drive
+  MOV DH, 32            ;Load 32 sectors (16 Kb)
+  CALL ReadSectors      ;Load into memory
+
+  MOV SI, DISKSCCMSG    ;If we get here then success
+  CALL PrintString16
+
+  MOV SI, 0X9000        ;Print out what is at 0x9000
+  CALL PrintString16    ;Should be BLAH BLAH BLAH
+
+  CLI                   ;Clear interrupts
+  HLT                   ;Halt Processor
+
+;Read DH sectors to ES:BX from Drive DL
+ReadSectors:
+  PUSH DX
+  MOV AH, 0X2     ;Read Disk Function
+  MOV CH, 0       ;Cylinder 0
+  MOV CL, 0X2     ;2nd Sector (512 bytes)
+  MOV AL, DH      ;No. Sectors
+  MOV DH, 0       ;Head 0
+  INT 0X13        ;Read
+  JC .DiskError   ;Error if Carry Flag set
+  POP DX
+  CMP AL, DH      ;Compare No. actually copied
+  JNE .DiskError
+RET
+.DiskError:
+  MOV SI, DISKERRMSG
+  CALL  PrintString16
+  CLI
+  HLT
+
+%include "Print16.i"  ;Include our print file
+
+WELCOMEMSG  DB  "--- Welcome to Geko (16-bit real mode) ---", 0
+DISKERRMSG  DB  "Disk Read Error!",0
+DISKSCCMSG  DB  "Disk Read Success!", 0
+BOOTDRIVE DB  0
+
+TIMES 510-($-$$) DB 0 
+DW 0XAA55
+
+;Code not loaded by BIOS after the 512 byte mark
+MSG     DB "BLAH BLAH BLAH", 0</CODE></PRE>
 
       </section>
     </div>

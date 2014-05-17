@@ -385,6 +385,9 @@ Full-Width Styles
 #footer_wrap {
   background: #212121;
 }
+.largecode{
+  max-height:400px;
+}
 .dir_table{
   border-collapse: collapse;
   margin: 20px;
