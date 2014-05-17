@@ -2,6 +2,24 @@
 [BITS 16]
 Start:
 	
+	MOV [BOOTDRIVE], DL ;Store Boot Device number
+	MOV BP, 0x8000		;Set Stack top to 0x8000
+    MOV SP, BP
+	XOR AX, AX			;Set segments to 0 offset
+	MOV DS, AX
+	MOV ES, AX			;Used for loaded memory location
+
+    MOV BX, 0X9000		;Load data here
+    MOV DL, [BOOTDRIVE]	;Select the current drive
+    MOV DH, 32 			;Load 32 sectors (16 Kb)
+    CALL ReadSectors	;Load into memory
+
+    MOV SI, DISKSCCMSG	;If we get here then success
+    CALL PrintString16
+
+    MOV SI, 0X9000		;Print out what is at 0x9000
+    CALL PrintString16	;Should be BLAH BLAH BLAH
+
     CLI                 ;Clear interrupts
     HLT                 ;Halt Processor
 
