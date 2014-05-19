@@ -150,7 +150,7 @@ Created by: Chris Barbour 2014
               <BR>
               Type the following code and save to the path C:\GekoOS\BootSector\Asm under the name BootSector.asm
             </P>
-            <PRE><CODE>[ORG 0X7C00]                        ;Code will be placed at 0x7C00
+            <PRE><CODE class='nasmcode'>[ORG 0X7C00]                        ;Code will be placed at 0x7C00
 [BITS 16]                           ;We must tell NASM to assemble 16-bit code
 Start:                CLI           ;Disables interrupt we don't want them
                       HLT           ;Halts the processor
@@ -168,7 +168,7 @@ DW 0XAA55                           ;The special duo</CODE></PRE>
                 To assemble the code into binary open up a command prompt window and type:
               </P>
               
-<PRE class='dark'><CODE class='dark'>cd C:\GekoOS\BootSector
+<PRE class='dark'><CODE class='dark shellscript'>cd C:\GekoOS\BootSector
 nasm -f bin .\Asm\BootSector.asm -o .\Bin\BootSector.bin</CODE></PRE>
               <BR>
               <P>
@@ -216,7 +216,7 @@ nasm -f bin .\Asm\BootSector.asm -o .\Bin\BootSector.bin</CODE></PRE>
               Copy over the BootSector.bin file to the VM directory either by simple copy and paste or by running the copy command as follows:
             </P>
 
-<PRE class='dark'><CODE class='dark'>cd C:\GekoOS
+<PRE class='dark'><CODE class='dark shellscript'>cd C:\GekoOS
 copy /Y /b .\BootSector\Bin\BootSector.bin .\VM\BootSector.bin</CODE></PRE>
             <P>
               Now double click the bochsrc file again and it will load your OS. You now have an operational operating system (if it all worked).
@@ -233,7 +233,7 @@ copy /Y /b .\BootSector\Bin\BootSector.bin .\VM\BootSector.bin</CODE></PRE>
     <!-- FOOTER  -->
     <div id="footer_wrap" class="outer">
       <footer class="inner">
-        <div style='float:right;font-size:30px;color:rgb(240,240,240);'><a href="../index.html"><</a>&nbsp&nbsp<a href="./Chapter02.html">></a></div>
+       <div style='float:right;font-size:30px;color:rgb(240,240,240);'><a id='prev'><</a>&nbsp&nbsp<a id='next'>></a></div>
         <p class="copyright">GekoOS maintained by <a href="https://github.com/bobjamin">Chris Barbour</a></p>
         <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>

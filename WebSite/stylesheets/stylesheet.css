@@ -36,6 +36,31 @@ time, mark, audio, video {
    padding-right:8px;
    border-radius:5px;
 }
+.mnemonic{
+      color:blue;
+    }
+    .preprocessor, .shelloption{
+      color:red;
+    }
+    .string, .shellcommand{
+      color:brown;
+    }
+    .register, .shelldir{
+      color:rgb(25,100,230);
+    }
+    .number{
+      color:gray;
+    }
+    .comment, .shellcomment{
+      color:darkgreen;
+    }
+    .sizeallocation{
+      color:pink;
+    }
+    .label{
+      color:orange;
+    }
+
 
 
 /* HTML5 display-role reset for older browsers */

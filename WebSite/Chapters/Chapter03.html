@@ -273,7 +273,7 @@ Created by: Chris Barbour 2014
               Lets start by getting our BootSector back to a clean state like the following:
             </P>
 
-<PRE><CODE>[ORG 0X7C00]
+<PRE><CODE class='nasmcode'>[ORG 0X7C00]
 [BITS 16]
 Start:
 
@@ -292,7 +292,7 @@ DW 0XAA55</CODE></PRE>
               Now add in a few variables below the <SPAN class='icode'>WELCOMEMSG</SPAN> variable. The last one is set to 0 for now but it will hold the current device. We won't use the first message but we can keep it there for later.
             </P>
 
-<PRE><CODE>WELCOMEMSG DB  "--- Welcome to Geko (16-bit real mode) ---", 0
+<PRE><CODE class='nasmcode'>WELCOMEMSG DB  "--- Welcome to Geko (16-bit real mode) ---", 0
 DISKERRMSG  DB  "Disk Read Error!",0
 DISKSCCMSG  DB  "Disk Read Success!", 0
 BOOTDRIVE DB  0</CODE></PRE>
@@ -302,7 +302,7 @@ BOOTDRIVE DB  0</CODE></PRE>
               Next we need to add some code after the 512 byte mark so that we have something useful to load. Place the following below the special duo line, <SPAN class='icode'>DW 0XAA55</SPAN>:
             </P>
 
-<PRE><CODE>;Code not loaded by BIOS after the 512 byte mark
+<PRE><CODE class='nasmcode'>;Code not loaded by BIOS after the 512 byte mark
 MSG     DB "BLAH BLAH BLAH", 0</CODE></PRE>
             <BR>
 
@@ -311,7 +311,7 @@ MSG     DB "BLAH BLAH BLAH", 0</CODE></PRE>
               Here is my ReadSector method, place it below the HLT after the Start label.
             </P>
 
-<PRE><CODE>;Read DH sectors to ES:BX from Drive DL
+<PRE><CODE class='nasmcode'>;Read DH sectors to ES:BX from Drive DL
 ReadSectors:
   PUSH DX
   MOV AH, 0X2     ;Read Disk Function
@@ -338,7 +338,7 @@ RET
               32 sectors are loaded giving us 16 Kb of free space. This should be enough for our Operating system to roam free and load a kernel.
             </P>
 
-<PRE><CODE>Start:
+<PRE><CODE class='nasmcode'>Start:
 
   MOV [BOOTDRIVE], DL   ;Store Boot Device number
   MOV BP, 0x8000        ;Set Stack top to 0x8000
@@ -369,7 +369,7 @@ RET
             </P>
           <H2>BootSector.asm</H2>
 
-<PRE class='largecode'><CODE>[ORG 0X7C00]
+<PRE class='largecode'><CODE class='nasmcode'>[ORG 0X7C00]
 [BITS 16]
 Start:
 

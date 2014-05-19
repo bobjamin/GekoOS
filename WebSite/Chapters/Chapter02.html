@@ -95,7 +95,7 @@ Created by: Chris Barbour 2014
 
               <H3> Print function </H3>
 
-<PRE><CODE>MOV AH, 0XA    ;Print Character Function
+<PRE><CODE class='nasmcode'>MOV AH, 0XA    ;Print Character Function
 MOV AL, 'X'    ;Print the X Character
 MOV BH, 0      ;The page number
 MOV CX, 5      ;Print X 5 times
@@ -132,7 +132,7 @@ INT 0X10       ;Make the magic happen</CODE></PRE>
 
             <H3>Assemble.bat</H3>
 
-<PRE class="dark"><CODE class='dark'>Remove unwanted text
+<PRE class="dark"><CODE class='dark shellscript'>Remove unwanted text
 @ECHO OFF
 
 ::Set up properties to reference later
@@ -197,7 +197,7 @@ PAUSE</CODE></PRE>
 
               <H3>Print16.i</H3>
 
-<PRE><CODE>;16-Bit print character method
+<PRE><CODE class='nasmcode'>;16-Bit print character method
 ;Prints character in AL at the current cursor position
 PrintChar16:
     PUSH BX           ;Save the current state
@@ -217,7 +217,7 @@ RET</CODE></PRE>
 
               <H3>BootSector.asm</H3>
 
-<PRE><CODE>[ORG 0X7C00]
+<PRE><CODE class='nasmcode'>[ORG 0X7C00]
 [BITS 16]
 Start:
     MOV AL, 'X'
@@ -284,7 +284,7 @@ DW 0XAA55</CODE></PRE>
 
                 <H3>Print16.i</H3>
 
-<PRE><CODE>;16-Bit print string method
+<PRE><CODE class='nasmcode'>;16-Bit print string method
 ;Prints a null terminated string of characters
 ; from the memory location pointed at by BX
 PrintString16:
@@ -309,7 +309,7 @@ RET</CODE></PRE>
                 
                 <H3>BootSector.asm</H3>
 
-<PRE><CODE>[ORG 0X7C00]
+<PRE><CODE class='nasmcode'>[ORG 0X7C00]
 [BITS 16]
 Start:
     XOR AX, AX      ;Set segments to 0 offset
