@@ -49,11 +49,12 @@ var precodes = document.getElementsByClassName('nasmcode');
   {
     var codetag = precodes[j];
     var text = codetag.innerText;
-    text = text.replace(/\b(CD|COPY|@?ECHO\.?|GOTO|IF|NASM|SET|START)\b/ig,"<SPAN class='shellcommand'>$&</SPAN>");
-    text = text.replace(/(\w\:|\.|\.\.)([^ \n])*\b/ig,"<SPAN class='shelloption'>$&</SPAN>");
-    text = text.replace(/(-\w+\b)/ig,"<SPAN class='shelldir'>$&</SPAN>");
-     text = text.replace(/(\:\:.*\b)/ig,"<SPAN class='shellcomment'>$&</SPAN>");
-    codetag.innerHTML =  text;
+   text = text.replace(/(\@?ECHO.? ?)|((ERRORLEVEL||PAUSE|START|SET|NASM|IF|GOTO|COPY) )/ig,"<SPAN class='shellcommand'>$&</SPAN>");
+  text = text.replace(/\/\w\b/ig,"<SPAN class='shelloption'>$&</SPAN>");
+  text = text.replace(/-\w\b/ig,"<SPAN class='shelloption'>$&</SPAN>");
+  text = text.replace(/\%\w+\%/ig,"<SPAN class='shelllookup'>$&</SPAN>");
+  text = text.replace(/\:\:.*/ig,"<SPAN class='shellcomment'>$&</SPAN>");
+  codetag.innerHTML =  text;
     var spantags = codetag.getElementsByTagName('SPAN');
     for(var i = 0;i<spantags.length;i++)
     {

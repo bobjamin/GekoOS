@@ -39,13 +39,13 @@ time, mark, audio, video {
 .mnemonic{
       color:blue;
     }
-    .preprocessor, .shelloption{
+    .preprocessor{
       color:red;
     }
-    .string, .shellcommand{
+    .string, .shelloption{
       color:brown;
     }
-    .register, .shelldir{
+    .register, .shellcommand{
       color:rgb(25,100,230);
     }
     .number{
@@ -57,7 +57,7 @@ time, mark, audio, video {
     .sizeallocation{
       color:pink;
     }
-    .label{
+    .label, .shelllookup{
       color:orange;
     }
 
@@ -472,7 +472,7 @@ td .dir_table{
   background-color:rgb(230,230,230);
 }
 .dark{
-  background-color:rgb(60,60,60);
+  background-color:rgb(30,30,30);
   color:rgb(240,240,240);
   font-weight:normal;
 }
