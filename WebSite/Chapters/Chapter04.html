@@ -137,6 +137,232 @@ MSG   DB  "HELLO",0</CODE></PRE>
             Create a new file called "Screen16.i" and save it in C:\GekoOS\BootSector\Asm\Include. This file will contain some functionality around interacting with the screen output like setting the cursor and clearing the screen. The reason this code will not be placed into the Print16.i file is because if we did that the BootSector would get bigger and possibly overflow. Bad.
           </P>
 
+          <H3>Current Video Mode</H3>
+
+            <P>
+              A useful function for getting the current video mode is provided by interrupt 0x10 shown below:
+            </P>
+
+            <TABLE class="dir_table">
+              <TR>
+                <TD colspan='3' style='font-size:medium;font-weight:bold;'>INT 0x10</TD>
+              </TR>
+              <TR>
+                <TH>Register</TH>
+                <TH>Value</TH>
+                <TH>Description</TH>
+              </TR>
+
+              <TR>
+                <TD>AH</TD>
+                <TD>0X0F</TD>
+                <TD>Get Current Video Mode</TD>
+              </TR>
+
+              <TR>
+                <TH colspan='3' style='text-align:center'>Returns</TH>
+              </TR>
+
+              <TR>
+                <TD>AL</TD>
+                <TD>Byte</TD>
+                <TD>Video Mode</TD>
+              </TR>
+            </TABLE>
+
+            <P>
+              We can add this to the Screen.i code as follows, Don't forget to add <SPAN class='icode'>[BITS 16]</SPAN> to the top of the file:
+            </P>
+<PRE><CODE class='nasmcode'>;Get current video mode in AL
+GetVideoMode:
+    MOV AH, 0X0F
+    INT 0X10
+RET</CODE></PRE>
+            <BR>
+
+            <P>
+              This code will be used later. By default the BIOS loads the processor into video mode 0x03. This means that it is in Text mode and that there are 80 characters across and 25 down. There are many standard video modes including the infamous 0x13 where games have been writen in the distant past but we don't need to get in too deep with this as we will want to write our own display drivers later in 32-bit land.
+            </P>
+
+          <H3>Get Rows and Columns</H3>
+
+            <P>
+              Useing the above mothod we can extrapolate the number of rows and columns there are, Currently we will only check for the default but this can be expanded at any time, its there for flexability. Place the following code after the previous snippet:
+            </P>
+
+<PRE><CODE class='nasmcode'>;Get Rows and Columns in BX and AX
+GetRowsAndColumns:
+  CALL GetVideoMode
+  CMP AL, 0X03    ;Default is 0x03
+  JE  .Default
+RET
+.Default:
+  MOV DL, 80      ;Rows
+  MOV DH, 25      ;Columns
+RET</CODE></PRE>
+            <BR>
+
+            <P>
+              The aim of the above functions is to give us information about the screen content so that it can be used later. The next snippet shows one use of these functions. It clears the screen by looking up the number of rows and columns and then sets the cursor to the top left corner.
+              <BR>
+              The BIOS also provides us with a set cursor function shown below:
+            </P>
+            <H3>Set Cursor Position</H3>
+             <TABLE class="dir_table">
+              <TR>
+                <TD colspan='3' style='font-size:medium;font-weight:bold;'>INT 0x10</TD>
+              </TR>
+              <TR>
+                <TH>Register</TH>
+                <TH>Value</TH>
+                <TH>Description</TH>
+              </TR>
+
+              <TR>
+                <TD>AH</TD>
+                <TD>0X02</TD>
+                <TD>Set Cursor Position</TD>
+              </TR>
+
+              <TR>
+                <TD>BH</TD>
+                <TD>Byte</TD>
+                <TD>The Page number</TD>
+              </TR>
+
+              <TR>
+                <TD>DH</TD>
+                <TD>Byte</TD>
+                <TD>The Row (Y)</TD>
+              </TR>
+
+              <TR>
+                <TD>DL</TD>
+                <TD>Byte</TD>
+                <TD>The Column (X)</TD>
+              </TR>
+            </TABLE>
+            <P>
+              We can tidy this up by adding the following function:
+            </P>
+
+<PRE><CODE class='nasmcode'>;16-bit Set Cursor method
+;X = DH, Y = DL; PAGE = BH
+SetCursorPos:
+  MOV AH, 0X02
+  INT 0X10
+RET</CODE></PRE>
+            <BR>
+
+          <H3>Clear Screen</H3>
+          <P>
+            Now we have enough information to clear the screen without having to hard code everything. To do this we can use another handy BIOS interrupt function from 0x10.
+          </P>
+
+          <TABLE class="dir_table">
+              <TR>
+                <TD colspan='3' style='font-size:medium;font-weight:bold;'>INT 0x10</TD>
+              </TR>
+              <TR>
+                <TH>Register</TH>
+                <TH>Value</TH>
+                <TH>Description</TH>
+              </TR>
+
+              <TR>
+                <TD>AH</TD>
+                <TD>0X06</TD>
+                <TD>Scroll Up Window</TD>
+              </TR>
+
+              <TR>
+                <TD>AL</TD>
+                <TD>Byte</TD>
+                <TD>0 for clear, uses CX and DX, otherwise no. lines to scroll</TD>
+              </TR>
+
+              <TR>
+                <TD>BH</TD>
+                <TD>Byte</TD>
+                <TD>Background and Foreground Colors</TD>
+              </TR>
+
+              <TR>
+                <TD>CH</TD>
+                <TD>Byte</TD>
+                <TD>Top Row</TD>
+              </TR>
+
+              <TR>
+                <TD>CL</TD>
+                <TD>Byte</TD>
+                <TD>Left Column</TD>
+              </TR>
+
+              <TR>
+                <TD>DH</TD>
+                <TD>Byte</TD>
+                <TD>Bottom Row</TD>
+              </TR>
+
+              <TR>
+                <TD>DL</TD>
+                <TD>Byte</TD>
+                <TD>Right Column</TD>
+              </TR>
+          </TABLE>
+
+          <P>
+            The following code shows the last method for this chapter, the clear screen method:
+          </P>
+
+<PRE><CODE class='nasmcode'>;16-bit Clear screen method
+;Clears the screen to the color in CH
+;and sets cursor to 0 on page in BH
+ClearScreen:
+  PUSH BX
+  CALL GetRowsAndColumns  ;Sets DL and DH
+  MOV AL, 0X00            ;Clear method
+  MOV AH, 0X06            ;Clear function
+  MOV BH, CH              ;Set fore and back color
+  XOR CX, CX              ;Start at 0, 0 
+  INT 0X10                ;Clear
+  POP BX                  ;Get page
+  XOR DX, DX              ;Set cursor to 0, 0
+  CALL SetCursorPos
+RET</CODE></PRE>
+          <BR>
+
+          <P>
+            Last, Go to the Boot Loader and edit it to read:
+          </P> 
+
+<PRE><CODE class='nasmcode'>[ORG 0X9000]
+[BITS 16]
+
+Start:
+    MOV CH, 0X0F      ;Set Color to White on Black
+    MOV BH, 0X0       ;Page 0
+    CALL ClearScreen  ;Clear Screen
+    MOV SI, MSG       ;Print HELLO
+    CALL PrintString16
+
+    CLI
+    HLT
+
+%include "Print16.i"
+%include "Screen16.i"
+
+MSG   DB  "HELLO",0</CODE></PRE>
+          <BR>
+
+          <P>
+            Now when you build this you will see only the word, HELLO at the top left of the screen.
+            <BR>
+            <BR>
+            Play about with the color byte to see different colors. The first 4 bits are the foreground and the last 4 bits are the background. The background also has a special feature when the highest bit is set it will cause the text to blink.
+          </P>
+
       </section>
     </div>
 

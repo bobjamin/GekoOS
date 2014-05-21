@@ -51,7 +51,7 @@ Created by: Chris Barbour 2014
               Printing to the screen will help us to debug our code and will provide feedback that our OS is working. The first place to start is the character. Introduce interrupt 0x10 or (16 if you like).
             </P>
 
-            <H3>Int 0x10</H3>
+            <H3>Int 0x10  (AH - 0xA)</H3>
               <P>
                 Interrupt 0x10 is the interrupt associated with video output. The first function we will look at is the character function.
               </P>
@@ -65,7 +65,7 @@ Created by: Chris Barbour 2014
 
                 <TR>
                   <TD>AH</TD>
-                  <TD>0xA</TD>
+                  <TD>0x0A</TD>
                   <TD>Print Character at Cursor Function</TD>
                 </TR>
 
