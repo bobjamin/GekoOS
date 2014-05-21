@@ -33,6 +33,7 @@ Created by: Chris Barbour 2014
   </head>
 
   <body>
+    <div style="border-radius:5px;position:fixed;left:50%;top:0px;background-color:rgb(240,240,240);border:1px solid rgb(200,200,200);z-index:500;padding:0 10px 0 10px;margin-top:-4px;box-shadow:0px 0px 10px 0px rgba(0,0,0,0.3);">&nbspContents&nbsp<div style="border:4px solid transparent;border-top:1px solid rgba(180,180,180,0.8);border-bottom:4px solid transparent;width:60%;margin:0 auto;margin-top:-2px;"></div></div>
 
     <!-- HEADER -->
     <div id="header_wrap" class="outer">
@@ -58,7 +59,7 @@ Created by: Chris Barbour 2014
             Now we have the ability to load sectors that exist after the boot sector we can start writing the boot loader. Open up the BootSector.asm and remove everthing after the special duo <SPAN class='icode'>0xAA55</SPAN>. We are going to write this in a new file. Also remove the two lines that print out whats present at 0x9000 shown below.
           </P>
 
-<PRE class='red'><CODE>    MOV SI, 0X9000
+<PRE class='red'><CODE class='nasmcode'>    MOV SI, 0X9000
     CALL PrintString16</CODE></PRE>
           <BR>
 
@@ -66,7 +67,7 @@ Created by: Chris Barbour 2014
             Replace the above two lines with:
           </P>
 
-<PRE><CODE>    JMP WORD 0X00:0X9000</CODE></PRE>
+<PRE><CODE class='nasmcode'>    JMP WORD 0X00:0X9000</CODE></PRE>
           <BR>
 
           <P>
@@ -87,7 +88,7 @@ Created by: Chris Barbour 2014
               Open up a new text document and save it as BootLoader.asm in the directory C:/GekoOS/BootSector/Asm/. Now edit the file to read:
             </P>
 
-<PRE><CODE>[ORG 0X9000]
+<PRE><CODE class='nasmcode'>[ORG 0X9000]
 [BITS 16]
 
 Start:
@@ -113,14 +114,28 @@ MSG   DB  "HELLO",0</CODE></PRE>
                 Add the following line below the <SPAN class='dark icode'>nasm</SPAN> line in Assemble.bat:
               </P>
 
-<PRE class='dark'><CODE class='dark'>nasm -f bin -o %BIN%\BootLoader.bin -i %ASMINC% %ASM%\BootLoader.asm</CODE></PRE>
+<PRE class='dark'><CODE class='dark shellscript'>nasm -f bin -o %BIN%\BootLoader.bin -i %ASMINC% %ASM%\BootLoader.asm</CODE></PRE>
               <BR>
 
               <P>
-                This line allows the boot loader to be assembled. Now all we need to do is to edit the copy line to read:
+                The above line allows the boot loader to be assembled. Now all we need to do is edit the copy line to read:
               </P>
               
-<PRE class='dark'><CODE class='dark'>copy /Y /b %BIN%\BootSector.bin + /b %BIN%\BootLoader.bin %VM%\BootSector.bin</CODE></PRE>               <BR>
+<PRE class='dark'><CODE class='dark shellscript'>copy /Y /b %BIN%\BootSector.bin + /b %BIN%\BootLoader.bin %VM%\BootSector.bin</CODE></PRE>              <BR>
+        
+              <P>
+                Double click the Assembler.bat and watch the magic before your eyes.
+                <BR>
+                Now you have a working boot loader and boot sector for all your 16-bit needs.
+              </P>
+
+        <H1>More Interrupts</H1>
+
+          <P>
+            We are now in to the big bad world of 16-bit where we can create a lot more than we could a moment ago. The main focus for the boot loader will be to load the kernel, but before we think about that lets add some useful functionality to play with.
+            <BR><BR>
+            Create a new file called "Screen16.i" and save it in C:\GekoOS\BootSector\Asm\Include. This file will contain some functionality around interacting with the screen output like setting the cursor and clearing the screen. The reason this code will not be placed into the Print16.i file is because if we did that the BootSector would get bigger and possibly overflow. Bad.
+          </P>
 
       </section>
     </div>

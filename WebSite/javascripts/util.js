@@ -29,7 +29,7 @@ var precodes = document.getElementsByClassName('nasmcode');
     text = text.replace(/(\bBITS|\bORG|%include)\b/ig,"<SPAN class='preprocessor'>$&</SPAN>");
     
     text = text.replace(/\bE?[ABCD][XHL]\b/ig,"<SPAN class='register'>$&</SPAN>");
-    text = text.replace(/(\b|\.).*\:/ig,"<SPAN class='label'>$&</SPAN>");
+    text = text.replace(/(\b|\.)[A-Z]\w*\:/ig,"<SPAN class='label'>$&</SPAN>");
     text = text.replace(/\bBYTE|WORD|DWORD|QWORD|(D[DBW])\b/ig,"<SPAN class='sizeallocation'>$&</SPAN>");
     text = text.replace(/(\b0X[0-9A-F]+\b)|(\b\d+\b)|(\b[0-9A-F]+H\b)|(\b[01]+b\b)/ig,"<SPAN class='number'>$&</SPAN>");
     text = text.replace(/\".*\"/ig,"<SPAN class='string'>$&</SPAN>");
