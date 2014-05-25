@@ -7,11 +7,14 @@ Start:
 		CALL ClearScreen	;Clear Screen
 		MOV SI, MSG			;Print HELLO
 		CALL PrintString16
-		
+		XOR CX, CX
+		CALL GetInput
+		CALL PrintString16
 		CLI
 		HLT
 
 %include "Print16.i"
 %include "Screen16.i"
+%include "Keyboard.i"
 
 MSG		DB	"HELLO",0
