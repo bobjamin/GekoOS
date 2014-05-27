@@ -15,6 +15,6 @@ Start:
 
 %include "Print16.i"
 %include "Screen16.i"
-%include "Keyboard.i"
+%include "Keyboard16.i"
 
 MSG		DB	"HELLO",0
