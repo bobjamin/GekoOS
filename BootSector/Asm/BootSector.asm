@@ -16,9 +16,8 @@ Start:
 
     MOV SI, DISKSCCMSG	;If we get here then success
     CALL PrintString16
-
-    MOV SI, 0X9000		;Print out what is at 0x9000
-    CALL PrintString16	;Should be BLAH BLAH BLAH
+    
+    JMP WORD 0X00:0X9000
 
     CLI                 ;Clear interrupts
     HLT                 ;Halt Processor
@@ -52,6 +51,3 @@ BOOTDRIVE	DB	0
 
 TIMES 510-($-$$) DB 0 
 DW 0XAA55
-
-;Code not loaded by BIOS after the 512 byte mark
-MSG 		DB "BLAH BLAH BLAH", 0
