@@ -363,7 +363,45 @@ MSG   DB  "HELLO",0</CODE></PRE>
             Play about with the color byte to see different colors. The high 4 bits are the background and the low 4 bits are the foreground. The background also has a special feature when the highest bit is set it will cause the text to blink.
           </P>
 
-      </section>
+        <H2>Utilities</H2>
+
+            <P>
+              This next section simply adds in functionality that will allow us to view memory at any time, this will be useful for debugging. I created a file called Utilites16.i and added it to the Include directory. All it does is provide a way of printing hexadecimal values.
+            </P>
+
+<PRE><CODE class='nasmcode'>[BITS 16]
+;Print Hex Character
+PrintHexChar16: 
+        PUSH AX
+        SHR AL, 4
+        CALL PrintHex4Bit16
+        POP AX
+        SHL AL, 4
+        SHR AL, 4
+        CALL PrintHex4Bit16
+RET
+
+;Print 4 bit Hex value stored in AL
+PrintHex4Bit16: 
+        CMP AL, 0XA
+        JL .Print
+        ADD AL, 0X07
+  .Print:   
+        ADD AL, 0X30
+        CALL PrintChar16
+RET</CODE></PRE>
+            <BR>
+
+        <H2>The Keyboard</H2>
+
+            <P>
+             [[FILL OUT CONTENT]]
+            </P>
+
+<PRE><CODE class='nasmcode'>[[FILL OUT CODE]]</CODE></PRE>
+            <BR>
+
+      </section>  
     </div>
 
     <!-- FOOTER  -->
