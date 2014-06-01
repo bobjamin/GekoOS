@@ -1,0 +1,219 @@
+---
+Created by: Chris Barbour 2014
+---
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="GekoOS : The Geko Operating System" />
+    <meta name="chapter" content="5" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="../stylesheets/stylesheet.css">
+
+    <title>GekoOS - Chapter 5</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/bobjamin/GekoOS">View on GitHub</a>
+
+          <h1 id="project_title">GekoOS</h1>
+          <h2 id="project_tagline">Chapter 05 - 32-Bit World</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/bobjamin/GekoOS/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/bobjamin/GekoOS/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+          
+        <H1>Protected Mode</H1>
+
+          <P>
+             Up until now we have not ventured far from the BIOS. It has provided many features that we could use to create a full operating system but we would be stuck in a 16-bit world. This world was called Real Mode.
+          </P>
+          <P>
+             <strong>Real mode</strong> provided useful features but there is no memory protection and worst of all we only have access to 16-bits at a time. If you really wanted to add two 32-bit integers it would take 4 clock cycles just to read the numbers in. This is halved in 32-bit mode. 
+          </P>
+          <P>
+             When we move into 32-bit mode everything changes. The processor looks up memory locations using a different method and we have access to up to 4Gb of RAM. The technique used to read memory provides us with good memory protection and therefore the name of this mode is the <strong>Protected Mode.</strong>
+          </P>
+
+          <H2>How To Get There</H2>
+
+            <P>
+               Ok its not just as simple as jumping into 32-bit protected mode. Of course you can tell the processor to go there but it will spit out an exception not long after. The first of many issues is that interrupts will not work anymore. This is a problem because everything that has been done so far was done using interrupts. 
+               <BR>
+                The Interrupt Vector table is blown away when we make the transition to 32-bit world so calling an interrupt would place us in some unknown area of memory that is likely to cause an exception.
+                <BR>
+                The second issue is that the method of memory access will change from being segment:offset to the use of descriptor tables.
+            </P>
+
+          <H2>Descriptor Tables</H2>
+
+            <P>
+              Descriptor Tables are used in protected mode to look up information about areas of memory and how they can be accessed. Instead of looking up a memory address using segment:offset we will now use descriptor:offset. The descriptor part will point to a descriptor in a descriptor table that will say where the memory location starts and how it can be accessed providing a good layer of protection.
+              <BR>
+              This functionality is build into the processors logic so we only have to provide the table and point to it. 
+            </P>
+
+            <P>
+               There are three types of descriptor table, <strong>Global Descriptor Table</strong>, <strong>Local Descriptor Table</strong> and <strong>Interrupt Descriptor Table</strong>. We have already seen the latter in the Interupt Vector Table thats just another name for it.
+            </P>
+
+            <H3>Global Descriptor Table</H3>
+
+              <P>
+                 The GDT or Global Descriptor Table defines global memory. It allows us to map areas of memory for data and for execution separatly. It contains 3 descriptors: a NULL descriptor, a Code descriptor and a Data descriptor. 
+                 <BR>
+                 A descriptor contains 8 byte values in the following format:
+               </P>
+
+               <TABLE class="dir_table">
+                 <TR>
+                   <TD colspan='3' style='font-size:medium;font-weight:bold;'>GDT</TD>
+                 </TR>
+                 <TR>
+                   <TH>Bits</TH>
+                   <TH>Value</TH>
+                   <TH>Description</TH>
+                 </TR>
+              
+                 <TR>
+                   <TD>0 - 15</TD>
+                   <TD>0 - 0xFFFF</TD>
+                   <TD>First 16 bits of Segment Limit</TD>
+                 </TR>
+                 <TR>
+                   <TD>16 - 39</TD>
+                   <TD>0 - 0xFFFFFF</TD>
+                   <TD>First 24 bits of Base Address</TD>
+                 </TR>
+                 <TR>
+                   <TD>40</TD>
+                   <TD>0 | 1</TD>
+                   <TD>Access Bit (Virtual Memory)</TD>
+                 </TR>
+                 <TR>
+                   <TD>41 - 43</TD>
+                   <TD>Shown Below</TD>
+                   <TD>Descriptor Type</TD>
+                 </TR>
+                 <TR>
+                   <TD>41</TD>
+                   <TD>For Code Segment:
+                     <BR>0: Execute Only
+                     <BR>1: Read and Execute
+                     <BR>For Data Segment:
+                     <BR>0: Read Only
+                     <BR>1: Read and Write
+                   </TD>
+                   <TD>Access Bit</TD>
+                 </TR>
+                  <TR>
+                   <TD>42</TD>
+                   <TD>1 | 0</TD>
+                   <TD>For Code Segment:
+                     <BR>Conforming
+                     <BR>For Data Segment:
+                     <BR>Expansion Direction
+                   </TD>
+                 </TR>
+                 <TR>
+                   <TD>43</TD>
+                   <TD>0: Data Segment
+                     <BR>1: Code Segment
+                   </TD>
+                   <TD>Executable Segment</TD>
+                 </TR>
+                 <TR>
+                   <TD>44</TD>
+                   <TD>0: System Descriptor
+                     <BR>1: Code or Data Descriptor
+                   </TD>
+                   <TD>Descriptor Bit</TD>
+                 </TR>
+                 <TR>
+                   <TD>45 - 46</TD>
+                   <TD>0 - 3: Ring Level
+                   </TD>
+                   <TD>Descriptor Privilege Level</TD>
+                 </TR>
+                 <TR>
+                   <TD>47</TD>
+                   <TD>0: True
+                     <BR>1: false
+                   </TD>
+                   <TD>Segment is in Memory (Virtual Memory)</TD>
+                 </TR>
+                 <TR>
+                   <TD>48-51</TD>
+                   <TD>0 - 0xF
+                   </TD>
+                   <TD>Bits 16-19 of the Segment Limit</TD>
+                 </TR>
+                 <TR>
+                   <TD>52</TD>
+                   <TD>0 | 1
+                   </TD>
+                   <TD>Reserved for OS use</TD>
+                 </TR>
+                 <TR>
+                   <TD>53</TD>
+                   <TD>0
+                   </TD>
+                   <TD>Reserved</TD>
+                 </TR>
+                 <TR>
+                   <TD>54</TD>
+                   <TD>0: 16-Bit
+                     <BR>1: 32-Bit
+                   </TD>
+                   <TD>Segment Type</TD>
+                 </TR>
+                 <TR>
+                   <TD>55</TD>
+                   <TD>0: None
+                     <BR>1: Limits multiplied by 4Kb
+                   </TD>
+                   <TD>Granularity</TD>
+                 </TR>
+                 <TR>
+                   <TD>56-63</TD>
+                   <TD>0 - 0xFF
+                   </TD>
+                   <TD>Bits 24-31 of the Base Address</TD>
+                 </TR>
+               </TABLE>
+
+               <P>
+                  We will need to add a GDT into our code so that we can point to sections within it. Add the following to GDT.i and add it to the Include directory.
+               </P> 
+<PRE><CODE class='nasmcode'></CODE></PRE>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+         <div style='float:right;font-size:30px;color:rgb(240,240,240);'><a id='prev'><</a>&nbsp&nbsp<a id='next'>></a></div>
+        <p class="copyright">GekoOS maintained by <a href="https://github.com/bobjamin">Chris Barbour</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    <script src="../javascripts/util.js"></script>
+
+
+  </body>
+</html>
