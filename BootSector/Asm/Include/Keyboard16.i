@@ -19,10 +19,12 @@ GetInput:
 		CALL PrintChar16		;Print character
 		INC BX					;Move to next output byte
 		ADD CX, 2				;Move to next input word
+		CMP CX, 0X20
+		JE .EnterPressed
 		JMP .Loop			
 .EnterPressed:
 		MOV BYTE [BX], 0 		;Add a zero to terminate the string
 		MOV SI, PARSEDINPUT		;Set SI to string
 RET
 
-PARSEDINPUT DB 'A'
+PARSEDINPUT: TIMES 32 DB 0
