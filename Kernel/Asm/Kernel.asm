@@ -1,0 +1,14 @@
+[ORG 0x10000]
+[BITS 32]
+Stage3:
+		MOV AX, 0X10
+		MOV DS, AX
+		MOV SS, AX
+		MOV ES, AX
+		MOV ESP, 0X90000
+
+		MOV BYTE [0xB8000], 'C'
+
+STOP:	
+		CLI
+		HLT
