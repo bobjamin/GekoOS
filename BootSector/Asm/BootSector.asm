@@ -1,7 +1,7 @@
 [ORG 0X7C00]
 [BITS 16]
 Start:
-	
+	XOR DH, DH
 	MOV [BOOTDRIVE], DL ;Store Boot Device number
 	MOV BP, 0x8000		;Set Stack top to 0x8000
     MOV SP, BP

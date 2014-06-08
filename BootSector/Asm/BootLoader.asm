@@ -1,7 +1,8 @@
 [ORG 0X9000]
 [BITS 16]
 jmp Start
-%include "Print16.i"
+
+%include "Floppy.i"
 %include "Screen16.i"
 %include "GDT.i"
 
@@ -10,14 +11,14 @@ Start:
 		MOV BH, 0X0 		;Page 0
 		CALL ClearScreen	;Clear Screen
 		
-		CLI
-		XOR AX, AX
-		MOV DS, AX
-		MOV ES, AX
-		MOV AX, 0X9000
-		MOV SS, AX
-		MOV SP, 0XFFFF
-		STI
+
+		MOV BX, 0X1000 		;Set ES:BX to 0x10000 (1Mb)
+		MOV ES, BX
+		XOR BX, BX
+		MOV AX, 0X5 		;Read from sector 5 (512 BootSector 2Kb BootLoader)
+		MOV CX, 0X05		;Read 5 Sectors for now
+		CALL ReadSectors	
+
 		CALL InstallGDT
 
 		CLI
@@ -25,23 +26,17 @@ Start:
 		OR EAX, 1
 		MOV CR0, EAX
 		
+		;Make a jump using label to Stage3
+		;So we can move into 32 bits and 
+		;Call to a higher location in memory (1Mb)
 		JMP 0X8:Stage3
 
 
 		CLI
 		HLT
 
-
 [BITS 32]
 Stage3:
-		MOV AX, 0X10
-		MOV DS, AX
-		MOV SS, AX
-		MOV ES, AX
-		MOV ESP, 0X9000
+		CALL 0X8: 0x10000 	;Call our Kernel
 
-		MOV BYTE [0xb8000], 'C'
-
-STOP:	
-		CLI
-		HLT
+TIMES 0X800-($-$$) DB 0

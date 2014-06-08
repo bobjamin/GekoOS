@@ -1,6 +1,6 @@
 [ORG 0x10000]
 [BITS 32]
-Stage3:
+Kernel:
 		MOV AX, 0X10
 		MOV DS, AX
 		MOV SS, AX
